@@ -33,3 +33,8 @@ Adds LAN multiplayer support to Guns, Gore and Cannoli 2.
 3. In the opened project, navigate to the file `ggc2-lanmodule/GGC2LanModule/GGC2LanModule.csproj`. In the code, find the lines `<PropertyGroup><GamePath>...</GamePath></PropertyGroup>` and specify the path to your game's root folder, then save the file.
 4. Now you can edit the file `ggc2-lanmodule/GGC2LanModule/ggc2.lanmodule.cs` and compile it. The compiled file will be output to `ggc2-lanmodule/GGC2LanModule/bin/Debug/GGC2LanModule.dll`.
 5. You can copy the compiled file and paste it into the game's root folder at `Guns, Gore and Cannoli 2\BepInEx\plugins\`.
+
+## CI and tests
+- GitHub Actions (`.github/workflows/ci.yml`) builds the plugin on every push/PR using hand-written, copyright-free stub assemblies (`build/stubs/`) in place of the real game/BepInEx DLLs, as a compile-time smoke check. See `build/stubs/README.md` for details.
+- Pushing a `vX.Y.Z` tag builds and attaches `GGC2LanModule.dll` to a new GitHub release automatically.
+- `tests/GGC2LanModule.Tests/` contains unit tests for the plugin's pure logic (`GGC2LanModule/PluginLogic.cs`). Run with `dotnet test tests/GGC2LanModule.Tests/GGC2LanModule.Tests.csproj`.
