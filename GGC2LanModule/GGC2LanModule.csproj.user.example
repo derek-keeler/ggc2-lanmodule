@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copy this file to "GGC2LanModule.csproj.user" (same folder) and edit the
+  path below to point at your own local install of Guns, Gore and Cannoli 2.
+
+  GGC2LanModule.csproj.user is already excluded by .gitignore (*.user), so
+  it's safe to put your real, machine-specific path in it - it will never be
+  committed. It's picked up automatically by both Visual Studio and the
+  dotnet CLI (e.g. "dotnet build"), no further setup needed.
+
+  For a one-off build without creating this file, you can instead pass:
+    dotnet build -p:GamePath="C:\path\to\Guns, Gore and Cannoli 2"
+-->
+<Project>
+  <PropertyGroup>
+    <GamePath>C:\path\to\Guns, Gore and Cannoli 2</GamePath>
+  </PropertyGroup>
+</Project>

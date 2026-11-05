@@ -29,10 +29,20 @@ Adds LAN multiplayer support to Guns, Gore and Cannoli 2.
 
 ## For developers
 1. If you want to modify the code, you can download the repository as a `.zip` or clone it using the `git clone` command.
-2. In the root folder of the mod project, open the `ggc2-lanmodule/GGC2LanModule/` folder using **Visual Studio**.
-3. In the opened project, navigate to the file `ggc2-lanmodule/GGC2LanModule/GGC2LanModule.csproj`. In the code, find the lines `<PropertyGroup><GamePath>...</GamePath></PropertyGroup>` and specify the path to your game's root folder, then save the file.
-4. Now you can edit the file `ggc2-lanmodule/GGC2LanModule/ggc2.lanmodule.cs` and compile it. The compiled file will be output to `ggc2-lanmodule/GGC2LanModule/bin/Debug/GGC2LanModule.dll`.
-5. You can copy the compiled file and paste it into the game's root folder at `Guns, Gore and Cannoli 2\BepInEx\plugins\`.
+2. Set up your local game path once - see "Local development" below.
+3. Build the plugin using **either**:
+   - **Visual Studio**: open `GGC2LanModule/GGC2LanModule.csproj`, then build (Debug or Release).
+   - **dotnet CLI** (no Visual Studio required): from the repo root, run `dotnet build GGC2LanModule/GGC2LanModule.csproj -c Debug` (or `-c Release`).
+4. The compiled file is output to `GGC2LanModule/bin/Debug/GGC2LanModule.dll` (or `bin/Release/...` for a Release build).
+5. Copy the compiled file into the game's root folder at `Guns, Gore and Cannoli 2\BepInEx\plugins\`.
+
+### Local development
+The project needs to find your own install of the game (and the BepInEx/Harmony DLLs inside it) via the `GamePath` MSBuild property. Don't edit `GGC2LanModule.csproj` directly for this - it's a tracked file shared by everyone. Instead, pick one:
+
+- **Recommended - `GGC2LanModule.csproj.user`** (works identically in Visual Studio and the dotnet CLI): copy `GGC2LanModule/GGC2LanModule.csproj.user.example` to `GGC2LanModule/GGC2LanModule.csproj.user` and edit the `GamePath` value inside it. This file is already excluded by `.gitignore` (`*.user`), so your local path is never committed, and it's picked up automatically on every build - no further setup needed.
+- **One-off CLI override**: pass it directly, e.g. `dotnet build GGC2LanModule/GGC2LanModule.csproj -p:GamePath="C:\path\to\game"`. Note: the game's own folder name contains a comma ("Guns, Gore and Cannoli 2"), and MSBuild's `-p:` parser splits plain commas in property values - if your path includes that comma, escape it as `%2c`, e.g. `-p:GamePath=C:\...\Guns%2c Gore and Cannoli 2`. The `.user` file above doesn't have this issue, so it's the easier option for everyday use.
+
+If `GamePath` isn't set (or doesn't point at a real install), the build fails immediately with a clear error telling you how to fix it, instead of a cryptic "reference not found".
 
 ## CI and tests
 - GitHub Actions (`.github/workflows/ci.yml`) builds the plugin on every push/PR using hand-written, copyright-free stub assemblies (`build/stubs/`) in place of the real game/BepInEx DLLs, as a compile-time smoke check. See `build/stubs/README.md` for details.
