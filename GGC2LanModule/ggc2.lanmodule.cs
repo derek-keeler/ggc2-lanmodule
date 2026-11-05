@@ -145,9 +145,7 @@ public class GGC2LanModule : BaseUnityPlugin
 
     private float GetScale()
     {
-        float sx = Screen.width / RefWidth;
-        float sy = Screen.height / RefHeight;
-        return Mathf.Min(sx, sy);
+        return PluginLogic.ComputeScale(Screen.width, Screen.height, RefWidth, RefHeight);
     }
 
     private void EnsureStyles(float scale)
@@ -342,7 +340,7 @@ public class GGC2LanModule : BaseUnityPlugin
         if (rtt != lastRtt)
         {
             lastRtt = rtt;
-            lastPingText = (rtt > 999 ? "999+" : rtt.ToString()) + "ms";
+            lastPingText = PluginLogic.FormatPing(rtt);
         }
         return lastPingText;
     }

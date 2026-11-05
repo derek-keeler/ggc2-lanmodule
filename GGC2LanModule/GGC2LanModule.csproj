@@ -68,6 +68,7 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="ggc2.lanmodule.cs" />
+        <Compile Include="PluginLogic.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

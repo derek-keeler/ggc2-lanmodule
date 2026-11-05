@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>UnityEngine</AssemblyName>
+    <RootNamespace>UnityEngine</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>

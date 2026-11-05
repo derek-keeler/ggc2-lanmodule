@@ -58,3 +58,8 @@ This method works with any code editor.
 1. Copy the compiled `GGC2LanModule.dll` file and paste it into the game's folder `Guns, Gore and Cannoli 2\BepInEx\plugins\`.
 2. To change the module version, edit the `Version` constant in the file `GGC2LanModule/Properties/AssemblyInfo.cs`. This is where you change the version of the code itself.
 3. The main code is located in `GGC2LanModule/ggc2.lanmodule.cs`.
+
+## CI and tests
+- GitHub Actions (`.github/workflows/ci.yml`) builds the plugin on every push/PR using hand-written, copyright-free stub assemblies (`build/stubs/`) in place of the real game/BepInEx DLLs, as a compile-time smoke check. See `build/stubs/README.md` for details.
+- Pushing a `vX.Y.Z` tag builds and attaches `GGC2LanModule.dll` to a new GitHub release automatically.
+- `tests/GGC2LanModule.Tests/` contains unit tests for the plugin's pure logic (`GGC2LanModule/PluginLogic.cs`). Run with `dotnet test tests/GGC2LanModule.Tests/GGC2LanModule.Tests.csproj`.

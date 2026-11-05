@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <RootNamespace></RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UnityEngine.Networking\UnityEngine.Networking.csproj" />
+  </ItemGroup>
+
+</Project>
