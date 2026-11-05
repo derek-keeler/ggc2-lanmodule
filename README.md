@@ -29,12 +29,14 @@ Adds LAN multiplayer support to Guns, Gore and Cannoli 2.
 
 ## For developers
 1. If you want to modify the code, you can download the repository as a `.zip` or clone it using the `git clone` command.
-2. Set up your local game path once - see "Local development" below.
-3. Build the plugin using **either**:
+2. **Prerequisite for the dotnet CLI**: the plugin itself targets **.NET Framework 4.7.2** (`GGC2LanModule/GGC2LanModule.csproj`, matching what BepInEx 5.x / this game's Mono runtime requires) - not .NET Core/5+. Building it with `dotnet build` needs the **.NET Framework 4.7.2 targeting pack** available on your machine. This is included automatically if you have Visual Studio with the ".NET desktop development" workload installed; otherwise install it standalone via the [.NET Framework 4.7.2 Developer Pack](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472). You'll also need a [.NET SDK](https://dotnet.microsoft.com/download) (CI builds with 9.0.x) for the `dotnet` command itself.
+   - (`tests/GGC2LanModule.Tests/` is unrelated to the plugin's own framework - it targets .NET 8 and only needs a regular .NET SDK, no targeting pack.)
+3. Set up your local game path once - see "Local development" below.
+4. Build the plugin using **either**:
    - **Visual Studio**: open `GGC2LanModule/GGC2LanModule.csproj`, then build (Debug or Release).
    - **dotnet CLI** (no Visual Studio required): from the repo root, run `dotnet build GGC2LanModule/GGC2LanModule.csproj -c Debug` (or `-c Release`).
-4. The compiled file is output to `GGC2LanModule/bin/Debug/GGC2LanModule.dll` (or `bin/Release/...` for a Release build).
-5. Copy the compiled file into the game's root folder at `Guns, Gore and Cannoli 2\BepInEx\plugins\`.
+5. The compiled file is output to `GGC2LanModule/bin/Debug/GGC2LanModule.dll` (or `bin/Release/...` for a Release build).
+6. Copy the compiled file into the game's root folder at `Guns, Gore and Cannoli 2\BepInEx\plugins\`.
 
 ### Local development
 The project needs to find your own install of the game (and the BepInEx/Harmony DLLs inside it) via the `GamePath` MSBuild property. Don't edit `GGC2LanModule.csproj` directly for this - it's a tracked file shared by everyone. Instead, pick one:
