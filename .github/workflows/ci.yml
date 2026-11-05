@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Compiles the real plugin project against hand-written, copyright-free
+  # stub assemblies (see build/stubs/README.md) that stand in for the game's
+  # own DLLs and BepInEx/Harmony core, which cannot be committed to or
+  # fetched by this repo. This is a compile-time smoke check only - it does
+  # not and cannot exercise real game behavior.
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Build stub assemblies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          dotnet build build/stubs/UnityEngine/UnityEngine.csproj -c Release
+          dotnet build build/stubs/UnityEngine.Networking/UnityEngine.Networking.csproj -c Release
+          dotnet build build/stubs/HarmonyLib/HarmonyLib.csproj -c Release
+          dotnet build build/stubs/BepInEx/BepInEx.csproj -c Release
+          dotnet build build/stubs/AssemblyCSharp/AssemblyCSharp.csproj -c Release
+
+      - name: Stage fake GamePath from stub output
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $stage = Join-Path $env:RUNNER_TEMP "stub-gamepath"
+          New-Item -ItemType Directory -Force -Path "$stage/ggc2_Data/Managed", "$stage/BepInEx/core" | Out-Null
+
+          Copy-Item build/stubs/UnityEngine/bin/Release/net472/UnityEngine.dll "$stage/ggc2_Data/Managed/"
+          Copy-Item build/stubs/UnityEngine.Networking/bin/Release/net472/UnityEngine.Networking.dll "$stage/ggc2_Data/Managed/"
+          Copy-Item build/stubs/AssemblyCSharp/bin/Release/net472/Assembly-CSharp.dll "$stage/ggc2_Data/Managed/"
+          Copy-Item build/stubs/BepInEx/bin/Release/net472/BepInEx.dll "$stage/BepInEx/core/"
+          Copy-Item build/stubs/HarmonyLib/bin/Release/net472/0Harmony.dll "$stage/BepInEx/core/"
+
+          "STUB_GAME_PATH=$stage" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build plugin against stub GamePath
+        shell: pwsh
+        run: dotnet build GGC2LanModule/GGC2LanModule.csproj -c Release -p:GamePath="${{ env.STUB_GAME_PATH }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GGC2LanModule
+          path: GGC2LanModule/bin/Release/GGC2LanModule.dll
+          if-no-files-found: error
+
+  # Unit tests for the plugin's pure, Unity/BepInEx/game-assembly-independent
+  # logic (see GGC2LanModule/PluginLogic.cs). Does not require the stub
+  # assemblies above or a real game install.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Run unit tests
+        run: dotnet test tests/GGC2LanModule.Tests/GGC2LanModule.Tests.csproj --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: tests/GGC2LanModule.Tests/TestResults/test-results.trx
+
+  # Publishes the compiled DLL to a GitHub release whenever a "vX.Y.Z" tag is
+  # pushed. The DLL built here is compiled against the stub assemblies, not
+  # the real game, so it is identical in behavior to (but not necessarily a
+  # byte-for-byte match of) a DLL built locally against the real GamePath -
+  # both compile the same ggc2.lanmodule.cs/PluginLogic.cs against identical
+  # public API signatures.
+  release:
+    needs: [build, test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: GGC2LanModule
+          path: dist
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          gh release create "${{ github.ref_name }}" "dist/GGC2LanModule.dll" --title "${{ github.ref_name }}" --generate-notes

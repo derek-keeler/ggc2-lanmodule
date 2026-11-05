@@ -155,9 +155,7 @@ public class GGC2LanModule : BaseUnityPlugin
 
     private float GetScale()
     {
-        float sx = Screen.width / RefWidth;
-        float sy = Screen.height / RefHeight;
-        return Mathf.Min(sx, sy);
+        return PluginLogic.ComputeScale(Screen.width, Screen.height, RefWidth, RefHeight);
     }
 
     private void EnsureStyles(float scale)
@@ -331,6 +329,14 @@ public class GGC2LanModule : BaseUnityPlugin
         });
     }
 
+    // Cache for BuildPingText() below - OnGUI() (and therefore this) runs
+    // multiple times per rendered frame (Unity fires it once for Layout and
+    // again for Repaint), but the underlying RTT only changes a few times a
+    // second at most. Without this, we'd allocate a new string every single
+    // call just to show the same text, for as long as a session is active.
+    private int lastRtt = int.MinValue;
+    private string lastPingText;
+
     // Ping (RTT) display - just your own ping, as a plain "XXms" number.
     // Works the same whether you're hosting or connected as a client:
     // NetworkClient.GetRTT() reports each player's own connection.
@@ -348,7 +354,12 @@ public class GGC2LanModule : BaseUnityPlugin
         if (client == null || !client.isConnected) return null;
 
         int rtt = client.GetRTT();
-        return (rtt > 999 ? "999+" : rtt.ToString()) + "ms";
+        if (rtt != lastRtt)
+        {
+            lastRtt = rtt;
+            lastPingText = PluginLogic.FormatPing(rtt);
+        }
+        return lastPingText;
     }
 
     private void OnGUI()
