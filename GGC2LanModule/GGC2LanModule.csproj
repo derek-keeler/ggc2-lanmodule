@@ -31,8 +31,19 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <GamePath>C:\Program Files\Steam\steamapps\common\Guns, Gore and Cannoli 2</GamePath>
+    <!-- Last-resort fallback only - do not edit this to point at your own
+         install. Each developer should instead override GamePath locally
+         via GGC2LanModule.csproj.user (works for both Visual Studio and the
+         dotnet CLI, see the "Local development" section in the README) or a
+         one-off "dotnet build -p:GamePath=..." - either one wins over this
+         default without ever touching this tracked file. -->
+    <GamePath Condition="'$(GamePath)' == ''">C:\Program Files\Steam\steamapps\common\Guns, Gore and Cannoli 2</GamePath>
   </PropertyGroup>
+  <!-- GGC2LanModule.csproj.user (if present) is imported automatically by
+       Microsoft.Common.targets below - no explicit Import needed here. It's
+       already excluded by .gitignore (*.user), so it's safe to put a real,
+       machine-specific GamePath in there. See
+       GGC2LanModule.csproj.user.example for the exact format. -->
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(GamePath)\ggc2_Data\Managed\Assembly-CSharp.dll</HintPath>
@@ -69,4 +80,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <!-- Fails the build with an actionable message instead of a cryptic
+       "reference not found" error when GamePath isn't (correctly) set. -->
+  <Target Name="EnsureGamePath" BeforeTargets="ResolveAssemblyReferences">
+    <Error
+      Condition="!Exists('$(GamePath)\ggc2_Data\Managed\Assembly-CSharp.dll')"
+      Text="GamePath ('$(GamePath)') doesn't point at a valid Guns, Gore and Cannoli 2 install (missing ggc2_Data\Managed\Assembly-CSharp.dll). Set it in GGC2LanModule.csproj.user (copy from GGC2LanModule.csproj.user.example) or pass -p:GamePath=&quot;C:\path\to\game&quot; - see the README's 'Local development' section." />
+  </Target>
 </Project>
