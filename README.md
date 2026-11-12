@@ -1,4 +1,7 @@
 # GGC2LanModule
+
+⚠️  _NOTE: This repo is a fork from the upstream [ggc2-lanmodule/ggc2-lanmodule](https://github.com/ggc2-lanmodule/ggc2-lanmodule) but has a bit more automation in its `main` branch. Care will be taken to update both the upstream fork as well as this to keep them in sync otherwise. The `upstream` branch will track the upstream repo._
+
 Adds LAN multiplayer support to Guns, Gore and Cannoli 2.
 
 - Star this repository to stay updated on new releases.

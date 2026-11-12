@@ -4,3 +4,11 @@
 bin/
 obj/
 private/
+**/bin/
+**/obj/
+
+# Vim backup files
+**/*~
+
+# Temporary workspace in repo
+tmp/
