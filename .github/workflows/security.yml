@@ -1,0 +1,82 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, so newly published advisories are caught even without new commits.
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Static analysis of the C# sources and of the workflow files themselves.
+  # build-mode "none" analyzes the source without compiling, so it needs
+  # neither the game's DLLs nor the stub assemblies used by ci.yml.
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [csharp, actions]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  # Blocks pull requests that introduce dependencies with known vulnerabilities.
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+
+  # Audits the NuGet packages (including transitive ones) of every project in
+  # the repo against the NuGet vulnerability database. Also covers packages
+  # that were already present, which dependency-review does not.
+  nuget-audit:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: List vulnerable packages
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $failed = $false
+          $projects = Get-ChildItem -Recurse -Filter *.csproj | Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' }
+          foreach ($project in $projects) {
+            dotnet restore $project.FullName --verbosity quiet
+            if ($LASTEXITCODE -ne 0) { throw "Restore failed for $($project.Name)" }
+            $output = dotnet list $project.FullName package --vulnerable --include-transitive 2>&1 | Out-String
+            Write-Host $output
+            # "dotnet list" exits 0 even when it finds vulnerabilities, so match its report text.
+            if ($output -match 'has the following vulnerable packages') { $failed = $true }
+          }
+          if ($failed) { throw "Vulnerable NuGet packages found - see the output above." }

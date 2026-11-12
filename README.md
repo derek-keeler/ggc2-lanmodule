@@ -84,4 +84,5 @@ Optionally, to attach the exact DLL you tested instead of the CI-built one, run 
 ## CI and tests
 - GitHub Actions (`.github/workflows/ci.yml`) builds the plugin on every push/PR using hand-written, copyright-free stub assemblies (`build/stubs/`) in place of the real game/BepInEx DLLs, as a compile-time smoke check. See `build/stubs/README.md` for details.
 - Pushing a `vX.Y.Z` tag builds and attaches `GGC2LanModule.dll` to a new GitHub release automatically.
+- `.github/workflows/security.yml` runs on pushes and PRs to `main` and weekly: CodeQL analysis (C# sources and the workflow files), a dependency review that blocks PRs adding vulnerable dependencies (moderate severity or higher), and a NuGet vulnerability audit of every project. `.github/dependabot.yml` opens weekly update PRs for NuGet packages and GitHub Actions.
 - `tests/GGC2LanModule.Tests/` contains unit tests for the plugin's pure logic (`GGC2LanModule/PluginLogic.cs`). Run with `dotnet test tests/GGC2LanModule.Tests/GGC2LanModule.Tests.csproj`.
