@@ -62,6 +62,25 @@ This method works with any code editor.
 2. To change the module version, edit the `Version` constant in the file `GGC2LanModule/Properties/AssemblyInfo.cs`. This is where you change the version of the code itself.
 3. The main code is located in `GGC2LanModule/ggc2.lanmodule.cs`.
 
+### 4. Releasing
+Releases are prepared locally, then published by pushing a tag. You need a clean working tree (no uncommitted changes to tracked files) and a working `GamePath`:
+```
+dotnet run --project build/release -- <version|major|minor|patch> [--no-tag]
+```
+For example `1.8.0`, or `minor` to bump from the current version. The tool:
+1. checks that your branch isn't behind `origin/main` and that the tag doesn't exist yet,
+2. runs the unit tests,
+3. updates the version in `GGC2LanModule/Properties/AssemblyInfo.cs` and adds it to the "Module version" dropdown in `.github/ISSUE_TEMPLATE/bug_report.yml`,
+4. builds a Release DLL against your real game install,
+5. commits `vX.Y.Z` and, unless `--no-tag` is given, tags it.
+
+**Nothing is pushed.** Test the built DLL in-game first, then pick a workflow:
+
+- **Direct push to `main`** (needs permission to bypass the branch protection, and must be run on `main`): `git push origin main vX.Y.Z`. The tag push makes CI create the GitHub release. To discard instead: `git tag -d vX.Y.Z; git reset --hard HEAD~1`.
+- **Via pull request** (use `--no-tag`, which works on any branch): push the branch and merge the PR. A squash merge creates a new commit, so tag the commit that is actually on `main`, not the PR branch: `git fetch origin; git tag -a vX.Y.Z -m vX.Y.Z origin/main; git push origin vX.Y.Z`. To discard instead: `git reset --hard HEAD~1`.
+
+Optionally, to attach the exact DLL you tested instead of the CI-built one, run `gh release upload vX.Y.Z GGC2LanModule/bin/Release/GGC2LanModule.dll --clobber` after CI creates the release.
+
 ## CI and tests
 - GitHub Actions (`.github/workflows/ci.yml`) builds the plugin on every push/PR using hand-written, copyright-free stub assemblies (`build/stubs/`) in place of the real game/BepInEx DLLs, as a compile-time smoke check. See `build/stubs/README.md` for details.
 - Pushing a `vX.Y.Z` tag builds and attaches `GGC2LanModule.dll` to a new GitHub release automatically.
